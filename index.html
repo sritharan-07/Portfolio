@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Portfolio — Visual Designer & Cinematographer</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --c:#00FFF5;--cp:rgba(0,255,245,.08);--cb:rgba(0,255,245,.20);
+  --cv:#8B2FFF;--co:#FF6B35;--cm:#FF006E;--cy:#FFD700;--bg:#000810;
+  --g1:0 0 12px rgba(0,255,245,.7),0 0 28px rgba(0,255,245,.3);
+  --g2:0 0 24px rgba(0,255,245,.7),0 0 60px rgba(0,255,245,.3);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
+  font-family:'Share Tech Mono',monospace;color:var(--c);cursor:none}
+
+/* scanlines */
+body::after{content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,
+    rgba(0,255,245,.012) 3px,rgba(0,255,245,.012) 4px);
+  pointer-events:none;z-index:8900}
+
+/* cursor */
+#cur{position:fixed;width:18px;height:18px;border:1.5px solid var(--c);
+  border-radius:50%;pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);box-shadow:var(--g1);
+  transition:width .2s,height .2s,background .2s}
+#cur2{position:fixed;width:5px;height:5px;background:var(--c);border-radius:50%;
+  pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:var(--g1)}
+
+/* canvas */
+#bg{position:fixed;inset:0;z-index:0}
+
+/* vignette */
+#vig{position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:radial-gradient(ellipse 85% 85% at 50% 50%,transparent 45%,rgba(0,4,12,.85))}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;z-index:6000;padding:18px 50px;
+  display:flex;align-items:center;justify-content:space-between}
+#hud::after{content:'';position:absolute;bottom:0;left:50px;right:50px;
+  height:1px;background:linear-gradient(to right,transparent,rgba(0,255,245,.2),transparent)}
+.hud-logo{font-family:'Orbitron',monospace;font-size:.75rem;
+  letter-spacing:.4em;color:var(--c);text-shadow:var(--g1);font-weight:700}
+.hud-r{display:flex;align-items:center;gap:22px}
+#sn{font-size:.55rem;letter-spacing:.35em;color:rgba(0,255,245,.5)}
+#pw{width:80px;height:1px;background:rgba(0,255,245,.15);position:relative}
+#pb{position:absolute;left:0;top:0;height:100%;background:var(--c);
+  box-shadow:var(--g1);transition:width .6s cubic-bezier(.25,.46,.45,.94)}
+#sc{font-size:.55rem;letter-spacing:.2em;color:rgba(0,255,245,.4)}
+
+/* nav dots */
+#nav{position:fixed;right:26px;top:50%;transform:translateY(-50%);
+  z-index:6000;display:flex;flex-direction:column;gap:14px;align-items:flex-end}
+.nd{width:8px;height:8px;border:1.5px solid rgba(0,255,245,.3);border-radius:50%;
+  cursor:pointer;transition:all .3s;position:relative}
+.nd::before{content:attr(data-l);position:absolute;right:20px;top:50%;
+  transform:translateY(-50%);font-size:.52rem;letter-spacing:.22em;
+  color:rgba(0,255,245,.4);white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none}
+.nd:hover::before,.nd.on::before{opacity:1}
+.nd.on{background:var(--c);border-color:var(--c);box-shadow:var(--g1)}
+.nd:hover{border-color:var(--c)}
+
+/* scroll hint */
+#hint{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);
+  z-index:6000;display:flex;flex-direction:column;align-items:center;gap:6px;
+  transition:opacity .5s}
+#hint span{font-size:.5rem;letter-spacing:.4em;color:rgba(0,255,245,.4)}
+.hw{width:18px;height:28px;border:1px solid rgba(0,255,245,.3);border-radius:9px;position:relative;margin:0 auto}
+.hw::after{content:'';position:absolute;top:5px;left:50%;transform:translateX(-50%);
+  width:2px;height:6px;background:var(--c);border-radius:1px;box-shadow:var(--g1);
+  animation:hwh 1.6s ease-in-out infinite}
+@keyframes hwh{0%,100%{opacity:1;top:5px}80%{opacity:0;top:14px}}
+
+/* 3D viewport */
+#vp{position:fixed;inset:0;perspective:1100px;perspective-origin:50% 50%;z-index:2}
+#scene{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
+
+/* slide */
+.slide{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;padding:88px 60px 68px}
+
+/* ──────────── SLIDE 1 HERO ──────────── */
+.hgrid{display:grid;grid-template-columns:1fr 1.2fr;gap:68px;
+  align-items:center;width:100%;max-width:1100px}
+
+.pwrap{display:flex;justify-content:center;align-items:center;
+  position:relative;height:340px}
+.pframe{width:256px;height:256px;border-radius:50%;overflow:hidden;
+  position:relative;z-index:3;border:2px solid rgba(0,255,245,.5);
+  box-shadow:0 0 40px rgba(0,255,245,.25),inset 0 0 40px rgba(0,255,245,.08)}
+.pframe img{width:100%;height:100%;object-fit:cover;display:block}
+.pframe-ph{width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(135deg,rgba(0,255,245,.05),rgba(139,47,255,.05))}
+.pframe-ph .ico{font-size:2rem}
+.pframe-ph span{font-size:.52rem;letter-spacing:.18em;color:rgba(0,255,245,.4);
+  text-align:center;line-height:1.9}
+.pscan{position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(to right,transparent,var(--c),transparent);
+  box-shadow:var(--g1);z-index:4;animation:pscan 3s ease-in-out infinite;border-radius:99px}
+@keyframes pscan{0%{top:0%;opacity:1}100%{top:100%;opacity:.15}}
+.pr{position:absolute;border-radius:50%;top:50%;left:50%;
+  transform:translate(-50%,-50%)}
+.pr1{width:286px;height:286px;border:1.5px dashed rgba(0,255,245,.4);
+  animation:sp 8s linear infinite}
+.pr2{width:328px;height:328px;border:1px solid rgba(139,47,255,.3);
+  animation:sp 14s linear infinite reverse}
+.pr3{width:370px;height:370px;border:1px solid rgba(0,255,245,.1);
+  animation:sp 22s linear infinite}
+.pr1::before,.pr1::after{content:'';position:absolute;width:6px;height:6px;
+  background:var(--c);border-radius:50%;box-shadow:var(--g2)}
+.pr1::before{top:-3px;left:50%;transform:translateX(-50%)}
+.pr1::after{bottom:-3px;left:50%;transform:translateX(-50%)}
+@keyframes sp{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+.htxt{display:flex;flex-direction:column;gap:16px}
+.htag{font-size:.54rem;letter-spacing:.4em;color:rgba(0,255,245,.4);
+  display:flex;align-items:center;gap:10px}
+.htag::before{content:'';width:34px;height:1px;background:var(--c);
+  box-shadow:var(--g1);flex-shrink:0}
+.hname{font-family:'Orbitron',monospace;font-size:clamp(2rem,4.2vw,3.8rem);
+  font-weight:900;line-height:1.02;color:#fff;text-shadow:var(--g2);letter-spacing:.08em}
+.glt{position:relative;display:inline-block}
+.glt::before,.glt::after{content:attr(data-t);position:absolute;top:0;left:0;
+  width:100%;height:100%}
+.glt::before{color:#FF006E;animation:ga 4s infinite;
+  clip-path:polygon(0 25%,100% 25%,100% 45%,0 45%)}
+.glt::after{color:var(--c);animation:gb 4s infinite;
+  clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%)}
+@keyframes ga{0%,82%,100%{transform:none;opacity:0}83%{transform:translateX(-5px);opacity:.7}85%{transform:translateX(4px);opacity:.7}87%{transform:none;opacity:0}}
+@keyframes gb{0%,86%,100%{transform:none;opacity:0}87%{transform:translateX(5px);opacity:.7}89%{transform:translateX(-3px);opacity:.7}91%{transform:none;opacity:0}}
+.hrole{font-family:'Rajdhani',sans-serif;font-size:.95rem;letter-spacing:.25em;
+  color:var(--c);text-shadow:var(--g1);font-weight:300;text-transform:uppercase}
+.hdiv{height:1px;background:linear-gradient(to right,var(--c),transparent);box-shadow:var(--g1)}
+.hbio{font-size:.7rem;line-height:2;color:rgba(0,255,245,.55);letter-spacing:.04em;max-width:380px}
+.hstats{display:flex;gap:26px;flex-wrap:wrap}
+.hsn{font-family:'Orbitron',monospace;font-size:1.7rem;font-weight:700;
+  color:var(--c);text-shadow:var(--g1);line-height:1}
+.hsl{font-size:.48rem;letter-spacing:.25em;color:rgba(0,255,245,.35);margin-top:4px}
+
+/* ──────────── SECTION COMMON ──────────── */
+.secl{width:100%;max-width:1220px;display:flex;flex-direction:column;gap:30px}
+.sech{display:flex;flex-direction:column;gap:5px}
+.secnum{font-size:.52rem;letter-spacing:.4em;color:rgba(0,255,245,.35)}
+.sect{font-family:'Orbitron',monospace;font-size:clamp(1.8rem,3.2vw,3rem);
+  font-weight:700;letter-spacing:.12em;text-shadow:var(--g2)}
+.secsub{font-size:.63rem;letter-spacing:.06em;color:rgba(0,255,245,.4);
+  line-height:2;max-width:520px;margin-top:4px}
+.secline{width:100%;height:1px}
+
+/* accent colours */
+.col-b{color:#FF6B35;text-shadow:0 0 20px rgba(255,107,53,.6)}
+.col-v{color:#8B2FFF;text-shadow:0 0 20px rgba(139,47,255,.6)}
+.col-m{color:#FF006E;text-shadow:0 0 20px rgba(255,0,110,.6)}
+.col-y{color:#FFD700;text-shadow:0 0 20px rgba(255,215,0,.6)}
+.sl-c{background:linear-gradient(to right,var(--c),transparent);box-shadow:var(--g1)}
+.sl-b{background:linear-gradient(to right,#FF6B35,transparent);box-shadow:0 0 8px rgba(255,107,53,.4)}
+.sl-v{background:linear-gradient(to right,#8B2FFF,transparent);box-shadow:0 0 8px rgba(139,47,255,.4)}
+.sl-m{background:linear-gradient(to right,#FF006E,transparent);box-shadow:0 0 8px rgba(255,0,110,.4)}
+.sl-y{background:linear-gradient(to right,#FFD700,transparent);box-shadow:0 0 8px rgba(255,215,0,.4)}
+
+/* ──────────── MEDIA GRID — natural sizes ──────────── */
+.mgrid{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+
+/* Real media items */
+.mi{position:relative;flex:0 0 auto;overflow:hidden;cursor:none}
+.mi img,.mi video{
+  display:block;
+  max-width:360px;
+  max-height:300px;
+  width:auto;
+  height:auto;
+  border:1px solid rgba(0,255,245,.22);
+  box-shadow:0 0 16px rgba(0,255,245,.08);
+  transition:box-shadow .4s,transform .4s;
+  background:rgba(0,8,16,1)
+}
+.mi:hover img,.mi:hover video{
+  box-shadow:0 0 40px rgba(0,255,245,.5),0 0 80px rgba(0,255,245,.2);
+  transform:scale(1.025)
+}
+.mi::before,.mi::after{content:'';position:absolute;width:14px;height:14px;
+  opacity:0;transition:opacity .3s;z-index:2}
+.mi::before{top:0;left:0;border-top:2px solid var(--c);border-left:2px solid var(--c)}
+.mi::after{bottom:0;right:0;border-bottom:2px solid var(--c);border-right:2px solid var(--c)}
+.mi:hover::before,.mi:hover::after{opacity:1}
+.mil{position:absolute;bottom:0;left:0;right:0;padding:8px 10px;
+  background:linear-gradient(to top,rgba(0,8,16,.9),transparent);
+  font-size:.48rem;letter-spacing:.2em;color:rgba(0,255,245,.55);
+  opacity:0;transition:opacity .3s}
+.mi:hover .mil{opacity:1}
+
+/* Placeholder */
+.mph{flex:0 0 auto;border:1px dashed rgba(0,255,245,.18);display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:rgba(0,255,245,.02);cursor:none;
+  transition:border-color .3s,background .3s;position:relative;overflow:hidden}
+.mph::before,.mph::after{content:'';position:absolute;width:12px;height:12px;opacity:.5}
+.mph::before{top:0;left:0;border-top:1px solid var(--c);border-left:1px solid var(--c)}
+.mph::after{bottom:0;right:0;border-bottom:1px solid var(--c);border-right:1px solid var(--c)}
+.mph:hover{border-color:rgba(0,255,245,.5);background:rgba(0,255,245,.05)}
+.mph .pi{font-size:1.5rem;opacity:.35}
+.mph .pt{font-size:.5rem;letter-spacing:.18em;color:rgba(0,255,245,.35);
+  text-align:center;line-height:2}
+
+/* responsive */
+@media(max-width:800px){
+  .hgrid{grid-template-columns:1fr;gap:32px;text-align:center}
+  .pwrap{height:270px}
+  .pframe{width:190px;height:190px}
+  .pr1{width:210px;height:210px}.pr2{width:245px;height:245px}.pr3{width:278px;height:278px}
+  .htag,.hbio,.hstats{justify-content:center;margin-left:auto;margin-right:auto}
+  .slide{padding:80px 18px 60px}
+  #hud{padding:14px 18px}
+  #nav{right:10px}
+  .mi img,.mi video{max-width:260px;max-height:220px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div id="vig"></div>
+<div id="cur"></div>
+<div id="cur2"></div>
+
+<!-- HUD -->
+<header id="hud">
+  <div class="hud-logo">◈ PORTFOLIO</div>
+  <div class="hud-r">
+    <span id="sn">IDENTITY</span>
+    <div id="pw"><div id="pb" style="width:20%"></div></div>
+    <span id="sc">01 / 05</span>
+  </div>
+</header>
+
+<!-- NAV DOTS -->
+<nav id="nav">
+  <div class="nd on" data-l="IDENTITY"   data-i="0"></div>
+  <div class="nd"    data-l="BLENDER 3D" data-i="1"></div>
+  <div class="nd"    data-l="VIDEO EDIT" data-i="2"></div>
+  <div class="nd"    data-l="SHOOT"      data-i="3"></div>
+  <div class="nd"    data-l="POSTER"     data-i="4"></div>
+</nav>
+
+<!-- SCROLL HINT -->
+<div id="hint">
+  <div class="hw"></div>
+  <span>SCROLL TO EXPLORE</span>
+</div>
+
+<!-- 3D VIEWPORT -->
+<div id="vp">
+ <div id="scene">
+
+  <!-- ═════════════════════════════
+       01 — IDENTITY / HERO
+  ════════════════════════════= -->
+  <div class="slide" id="s0" style="transform:translateZ(0px)">
+   <div class="hgrid">
+
+    <!-- Photo column -->
+    <div class="pwrap">
+      <div class="pr pr3"></div>
+      <div class="pr pr2"></div>
+      <div class="pr pr1"></div>
+      <div class="pframe">
+        <!--
+          ✏️  HOW TO ADD YOUR PHOTO:
+          Replace the <div class="pframe-ph">...</div> block below with:
+          <img src="your-photo.jpg" alt="Your Name">
+        -->
+        <div class="pframe-ph">
+          <span class="ico">◉</span>
+          <span>REPLACE THIS WITH<br/>&lt;img src="photo.jpg"&gt;</span>
+        </div>
+        <div class="pscan"></div>
+      </div>
+    </div>
+
+    <!-- Text column -->
+    <div class="htxt">
+      <div class="htag">PORTFOLIO · 2024</div>
+      <h1 class="hname">
+        <span class="glt" data-t="YOUR">YOUR</span><br/>
+        <span class="glt" data-t="NAME">NAME</span>
+      </h1>
+      <div class="hrole">Visual Designer · Cinematographer</div>
+      <div class="hdiv"></div>
+      <p class="hbio">Creating visual experiences through light,<br/>
+      lens and design. Every frame intentional.<br/>
+      Every pixel tells a story.</p>
+      <div class="hstats">
+        <div><div class="hsn" data-n="8"   data-s="+">0+</div><div class="hsl">YEARS</div></div>
+        <div><div class="hsn" data-n="120" data-s="+">0+</div><div class="hsl">PROJECTS</div></div>
+        <div><div class="hsn" data-n="34"  data-s="">0</div><div class="hsl">CLIENTS</div></div>
+      </div>
+    </div>
+
+   </div>
+  </div><!-- /s0 -->
+
+  <!-- ═════════════════════════════
+       02 — BLENDER 3D
+  ════════════════════════════= -->
+  <div class="slide" id="s1" style="transform:translateZ(-2500px)">
+   <div class="secl">
+    <div class="sech">
+      <span class="secnum">02 ·</span>
+      <h2 class="sect col-b">BLENDER 3D</h2>
+      <p class="secsub">3D scenes, animation and motion graphics. Videos load in their original size and ratio.</p>
+    </div>
+    <div class="secline sl-b"></div>
+    <div class="mgrid" id="g-blender">
+      <div class="mph" style="width:260px;height:158px"><span class="pi">▶</span><span class="pt">ADD BLENDER<br/>VIDEO / RENDER</span></div>
+      <div class="mph" style="width:200px;height:158px"><span class="pi">▶</span><span class="pt">ADD BLENDER<br/>VIDEO / RENDER</span></div>
+      <div class="mph" style="width:280px;height:158px"><span class="pi">▶</span><span class="pt">ADD BLENDER<br/>VIDEO / RENDER</span></div>
+      <div class="mph" style="width:220px;height:158px"><span class="pi">▶</span><span class="pt">ADD BLENDER<br/>VIDEO / RENDER</span></div>
+    </div>
+   </div>
+  </div><!-- /s1 -->
+
+  <!-- ═════════════════════════════
+       03 — VIDEO EDITING
+  ════════════════════════════= -->
+  <div class="slide" id="s2" style="transform:translateZ(-5000px)">
+   <div class="secl">
+    <div class="sech">
+      <span class="secnum">03 ·</span>
+      <h2 class="sect col-v">VIDEO EDIT</h2>
+      <p class="secsub">Edited films and cinematic cuts. Aspect ratio preserved exactly as filmed — no cropping.</p>
+    </div>
+    <div class="secline sl-v"></div>
+    <div class="mgrid" id="g-edit">
+      <div class="mph" style="width:300px;height:170px"><span class="pi">▶</span><span class="pt">ADD EDITED<br/>VIDEO</span></div>
+      <div class="mph" style="width:230px;height:170px"><span class="pi">▶</span><span class="pt">ADD EDITED<br/>VIDEO</span></div>
+      <div class="mph" style="width:264px;height:170px"><span class="pi">▶</span><span class="pt">ADD EDITED<br/>VIDEO</span></div>
+      <div class="mph" style="width:300px;height:170px"><span class="pi">▶</span><span class="pt">ADD EDITED<br/>VIDEO</span></div>
+    </div>
+   </div>
+  </div><!-- /s2 -->
+
+  <!-- ═════════════════════════════
+       04 — SHOOT
+  ════════════════════════════= -->
+  <div class="slide" id="s3" style="transform:translateZ(-7500px)">
+   <div class="secl">
+    <div class="sech">
+      <span class="secnum">04 ·</span>
+      <h2 class="sect col-m">SHOOT</h2>
+      <p class="secsub">Raw footage and field photography. Portrait, landscape or square — displays at its natural dimensions.</p>
+    </div>
+    <div class="secline sl-m"></div>
+    <div class="mgrid" id="g-shoot">
+      <div class="mph" style="width:248px;height:188px"><span class="pi">🎬</span><span class="pt">ADD SHOOT<br/>VIDEO / PHOTO</span></div>
+      <div class="mph" style="width:188px;height:238px"><span class="pi">🎬</span><span class="pt">ADD SHOOT<br/>VIDEO / PHOTO</span></div>
+      <div class="mph" style="width:278px;height:188px"><span class="pi">🎬</span><span class="pt">ADD SHOOT<br/>VIDEO / PHOTO</span></div>
+      <div class="mph" style="width:208px;height:188px"><span class="pi">🎬</span><span class="pt">ADD SHOOT<br/>VIDEO / PHOTO</span></div>
+    </div>
+   </div>
+  </div><!-- /s3 -->
+
+  <!-- ═════════════════════════════
+       05 — POSTER DESIGN
+  ════════════════════════════= -->
+  <div class="slide" id="s4" style="transform:translateZ(-10000px)">
+   <div class="secl">
+    <div class="sech">
+      <span class="secnum">05 ·</span>
+      <h2 class="sect col-y">POSTER DESIGN</h2>
+      <p class="secsub">Visual design and poster art. Every image shows in its exact original dimensions — zero forced cropping.</p>
+    </div>
+    <div class="secline sl-y"></div>
+    <div class="mgrid" id="g-poster">
+      <div class="mph" style="width:146px;height:208px"><span class="pi">🖼</span><span class="pt">ADD<br/>POSTER</span></div>
+      <div class="mph" style="width:146px;height:208px"><span class="pi">🖼</span><span class="pt">ADD<br/>POSTER</span></div>
+      <div class="mph" style="width:208px;height:146px"><span class="pi">🖼</span><span class="pt">ADD<br/>POSTER</span></div>
+      <div class="mph" style="width:146px;height:208px"><span class="pi">🖼</span><span class="pt">ADD<br/>POSTER</span></div>
+      <div class="mph" style="width:146px;height:146px"><span class="pi">🖼</span><span class="pt">ADD<br/>POSTER</span></div>
+      <div class="mph" style="width:146px;height:208px"><span class="pi">🖼</span><span class="pt">ADD<br/>POSTER</span></div>
+    </div>
+   </div>
+  </div><!-- /s4 -->
+
+ </div><!-- /scene -->
+</div><!-- /vp -->
+
+<script>
+/* ═══════════════════════════════
+   CUSTOM CURSOR — FIXED
+═══════════════════════════════ */
+const curRing = document.getElementById('cur');
+const curDot  = document.getElementById('cur2');
+let mx = window.innerWidth / 2;
+let my = window.innerHeight / 2;
+let cx = mx, cy = my;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX;
+  my = e.clientY;
+  // Dot snaps instantly
+  curDot.style.left = mx + 'px';
+  curDot.style.top  = my + 'px';
+});
+
+// Ring trails with lerp
+(function animCursor() {
+  cx += (mx - cx) * 0.12;
+  cy += (my - cy) * 0.12;
+  curRing.style.left = cx + 'px';
+  curRing.style.top  = cy + 'px';
+  requestAnimationFrame(animCursor);
+})();
+
+// Expand ring on interactive elements
+const hoverEls = document.querySelectorAll('.nd, .mph, .mi, a, button');
+hoverEls.forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    curRing.style.width      = '38px';
+    curRing.style.height     = '38px';
+    curRing.style.background = 'rgba(0,255,245,0.08)';
+  });
+  el.addEventListener('mouseleave', () => {
+    curRing.style.width      = '18px';
+    curRing.style.height     = '18px';
+    curRing.style.background = 'transparent';
+  });
+});
+
+/* ═══════════════════════════════
+   HOLOGRAPHIC CANVAS BACKGROUND
+═══════════════════════════════ */
+const cv  = document.getElementById('bg');
+const ctx = cv.getContext('2d');
+
+function resizeCanvas() {
+  cv.width  = window.innerWidth;
+  cv.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Particles
+const PART_COUNT = 120;
+const parts = [];
+for (let i = 0; i < PART_COUNT; i++) {
+  parts.push({
+    x:  Math.random() * window.innerWidth,
+    y:  Math.random() * window.innerHeight,
+    vx: (Math.random() - 0.5) * 0.3,
+    vy: (Math.random() - 0.5) * 0.3,
+    r:  Math.random() * 1.2 + 0.3,
+    a:  Math.random()
+  });
+}
+
+// Grid lines
+const GRID_COLS = 14;
+const GRID_ROWS = 9;
+
+let frame = 0;
+function drawBg() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const W = cv.width, H = cv.height;
+  frame++;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(0,255,245,0.04)';
+  ctx.lineWidth   = 1;
+  for (let c = 0; c <= GRID_COLS; c++) {
+    const x = (c / GRID_COLS) * W;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let r = 0; r <= GRID_ROWS; r++) {
+    const y = (r / GRID_ROWS) * H;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Horizon glow line
+  const gy = H * 0.5 + Math.sin(frame * 0.005) * 30;
+  const grad = ctx.createLinearGradient(0, gy - 1, 0, gy + 1);
+  grad.addColorStop(0,   'transparent');
+  grad.addColorStop(0.5, 'rgba(0,255,245,0.15)');
+  grad.addColorStop(1,   'transparent');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, gy - 8, W, 16);
+
+  // Particles
+  parts.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+    if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+    p.a += 0.008;
+    const alpha = (Math.sin(p.a) * 0.5 + 0.5) * 0.6;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,255,245,${alpha})`;
+    ctx.fill();
+  });
+
+  // Mouse-reactive radial
+  const mr = ctx.createRadialGradient(mx, my, 0, mx, my, 260);
+  mr.addColorStop(0,   'rgba(0,255,245,0.04)');
+  mr.addColorStop(1,   'transparent');
+  ctx.fillStyle = mr;
+  ctx.fillRect(0, 0, W, H);
+
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+/* ═══════════════════════════════
+   SLIDE NAVIGATION (scroll + nav dots)
+═══════════════════════════════ */
+const SLIDES      = 5;
+const SLIDE_DEPTH = 2500; // px between slides in Z
+const slides      = document.querySelectorAll('.slide');
+const scene       = document.getElementById('scene');
+const dots        = document.querySelectorAll('.nd');
+const snEl        = document.getElementById('sn');
+const pbEl        = document.getElementById('pb');
+const scEl        = document.getElementById('sc');
+const hintEl      = document.getElementById('hint');
+
+const LABELS = ['IDENTITY','BLENDER 3D','VIDEO EDIT','SHOOT','POSTER'];
+
+let current  = 0;
+let animating = false;
+
+function goTo(idx) {
+  if (idx < 0 || idx >= SLIDES || idx === current) return;
+  current   = idx;
+  animating = true;
+
+  const zTarget = current * SLIDE_DEPTH;
+  scene.style.transition = 'transform 1s cubic-bezier(0.77,0,0.175,1)';
+  scene.style.transform  = `translateZ(${zTarget}px)`;
+
+  // HUD update
+  snEl.textContent = LABELS[current];
+  pbEl.style.width = ((current + 1) / SLIDES * 100) + '%';
+  scEl.textContent = String(current + 1).padStart(2,'0') + ' / 0' + SLIDES;
+
+  // Dots update
+  dots.forEach((d, i) => d.classList.toggle('on', i === current));
+
+  // Hide scroll hint after first move
+  if (current > 0) hintEl.style.opacity = '0';
+  else             hintEl.style.opacity = '1';
+
+  setTimeout(() => { animating = false; }, 1000);
+}
+
+// Wheel scroll
+let wheelAcc = 0;
+window.addEventListener('wheel', e => {
+  e.preventDefault();
+  wheelAcc += e.deltaY;
+  if (Math.abs(wheelAcc) > 60) {
+    goTo(current + (wheelAcc > 0 ? 1 : -1));
+    wheelAcc = 0;
+  }
+}, { passive: false });
+
+// Nav dots click
+dots.forEach(d => {
+  d.addEventListener('click', () => goTo(+d.dataset.i));
+});
+
+// Touch swipe
+let touchY = 0;
+window.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
+window.addEventListener('touchend',   e => {
+  const dy = touchY - e.changedTouches[0].clientY;
+  if (Math.abs(dy) > 40) goTo(current + (dy > 0 ? 1 : -1));
+}, { passive: true });
+
+// Keyboard
+window.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'PageDown') goTo(current + 1);
+  if (e.key === 'ArrowUp'   || e.key === 'PageUp')   goTo(current - 1);
+});
+
+/* ═══════════════════════════════
+   COUNTER ANIMATION (stats)
+═══════════════════════════════ */
+function animCount(el) {
+  const target = +el.dataset.n;
+  const suffix = el.dataset.s || '';
+  const dur    = 1400;
+  const start  = performance.now();
+  (function tick(now) {
+    const t = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(ease * target) + suffix;
+    if (t < 1) requestAnimationFrame(tick);
+  })(start);
+}
+document.querySelectorAll('.hsn').forEach(el => animCount(el));
+</script>
+</body>
+</html>
